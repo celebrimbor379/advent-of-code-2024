@@ -2,11 +2,14 @@ from pprint import pp
 import argparse
 
 def is_valid_update(update, rules):
+    seen = set()
+    
     for i, page in enumerate(update):
         if page in rules:
-            for antecedent in rules[page]:
-                if (antecedent in update) and (not antecedent in update[0:i]):
+            for follower in rules[page]:
+                if follower in seen:
                     return False
+        seen.add(page)
     return True
 
 def get_solution(input_path):
@@ -19,10 +22,8 @@ def get_solution(input_path):
             if line.strip() == '':
                 finished_rules = True
             elif not finished_rules:
-                v, k = [int(x) for x in line.strip().split('|')]
-                r = rules.get(k, [])
-                r.append(v)
-                rules[k] = r
+                k, v = [int(x) for x in line.strip().split('|')]
+                rules.setdefault(k, []).append(v)
             else:
                 updates.append([int(x) for x in line.strip().split(',')])
 
