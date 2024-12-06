@@ -10,22 +10,9 @@ def aoc_sort(l, rules):
 
     return sorted(l, key=cmp_to_key(cmp_fn))
 
-def correctly_ordered(update, rules):
-    already_seen = set()
-
-    # Check to see if anything to the left of this element is in a rule saying it should always be
-    # to the right
-    for x in update:
-        if x in rules:
-            for follower in rules[x]:
-                if follower in already_seen:
-                    return False
-        already_seen.add(x)
-    return True
-
 def get_solution(input_path):
+    result = 0
     rules = {}
-    lists = []
 
     with open(input_path) as input_file:
         finished_rules = False
@@ -36,9 +23,12 @@ def get_solution(input_path):
                 k, v = [int(x) for x in line.strip().split('|')]
                 rules.setdefault(k, []).append(v)
             else:
-                lists.append([int(x) for x in line.strip().split(',')])
+                l = [int(x) for x in line.strip().split(',')]
+                sorted_l = aoc_sort(l, rules)
+                if sorted_l != l:
+                    result += sorted_l[len(sorted_l) // 2]
 
-    return sum([x[len(x) // 2] for x in [aoc_sort(l, rules) for l in lists if not correctly_ordered(l, rules)]])
+    return result
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
