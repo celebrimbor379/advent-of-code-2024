@@ -1,7 +1,5 @@
-from pprint import pp
 import argparse
 from enum import Enum
-import copy
 
 class Position:
     row = 0
@@ -53,9 +51,9 @@ def check_for_loop(grid, position, seen, direction):
         if next_pos.on_grid(grid) and grid[next_pos.row][next_pos.col] == '#':
             if (position in seen) and (direction in seen[position]):
                 return 1
-            
-            seen.setdefault(position, set()).add(direction)
-            direction = Direction.turn(direction)
+            else:
+                seen.setdefault(position, set()).add(direction)
+                direction = Direction.turn(direction)
         else:
             position = next_pos
     
@@ -80,13 +78,12 @@ def get_solution(input_path):
     position = start.inc(direction)
 
     while position.on_grid(grid):
-        seen.add(position)
         next_pos = position.inc(direction)
         
         if next_pos.on_grid(grid) and grid[next_pos.row][next_pos.col] == '#':
             direction = Direction.turn(direction)
-            position = position.inc(direction)
         else:
+            seen.add(position)
             position = next_pos
 
     for s in seen:
