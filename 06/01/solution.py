@@ -1,4 +1,3 @@
-from pprint import pp
 import argparse
 from enum import Enum
 
@@ -26,8 +25,6 @@ def is_on_grid(grid, position):
             and position[1] < len(grid[0]))
 
 def inc_position(position, direction):
-    # print(direction)
-    # print([position[0] + direction.value[0], position[1] + direction.value[1]])
     return [position[0] + direction.value[0], position[1] + direction.value[1]]
 
 def get_solution(input_path):
@@ -43,10 +40,6 @@ def get_solution(input_path):
             if '^' in row:
                 position = [len(grid) - 1, row.index('^')]
 
-    print()
-    # print(position)
-    # pp(grid)
-
     while is_on_grid(grid, position):
         next_pos = inc_position(position, direction)
         if is_on_grid(grid, next_pos) and grid[next_pos[0]][next_pos[1]] == '#':
@@ -57,7 +50,6 @@ def get_solution(input_path):
             grid[position[0]][position[1]] = 'X'
             position = next_pos
     
-    # pp(grid)
     return result
 
 if __name__ == "__main__":
