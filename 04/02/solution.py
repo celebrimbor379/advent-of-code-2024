@@ -3,7 +3,7 @@ import argparse
 CHARS = ['M', 'A', 'S']
 
 # The name "dfs" is totally wrong here. Left over from when I thought the reqs were to do a zig-zag
-# search, but it's closing in on 10pm and I'm sleepy so fuck it.
+# search, but it's closing in on 10pm and I'm sleepy so eff it.
 def dfs(grid, row, col, target_char, direction):
     if ((row < 0) or (row == len(grid))
         or (col < 0) or (col == len(grid[0]))

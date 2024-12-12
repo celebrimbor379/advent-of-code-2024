@@ -98,7 +98,7 @@ def get_solution(input_path):
 
     with open(input_path) as input_file:
         for line in input_file:
-            # You have got to fucking kidding me. Over an hour spent debugging and thinking that
+            # You have got to effing kidding me. Over an hour spent debugging and thinking that
             # there was some critical bug with my BEAUTIFUL STATE MACHINE only to find out ***FROM
             # REDDIT*** that the do/don't commands don't reset at the beginning of each line??
             megaline += line.strip()
