@@ -36,13 +36,10 @@ def count_horizontal_sides(positions):
     return sides
 
 def compute_num_sides(perimeter):
-    num_sides = 0
-    num_sides += count_horizontal_sides(perimeter['UP'])
-    num_sides += count_horizontal_sides(perimeter['DOWN'])
-    num_sides += count_vertical_sides(perimeter['LEFT'])
-    num_sides += count_vertical_sides(perimeter['RIGHT'])
-    
-    return num_sides
+    return (count_horizontal_sides(perimeter['UP'])
+            + count_horizontal_sides(perimeter['DOWN'])
+            + count_vertical_sides(perimeter['LEFT'])
+            + count_vertical_sides(perimeter['RIGHT']))
 
 def explore_region(pos, grid):
     queue = deque()
@@ -90,14 +87,14 @@ def get_solution(input_path):
     with open(input_path) as input_file:
         result = 0
         grid = [[x for x in row.strip()] for row in input_file.readlines()]
-        visited = set()
+        explored = set()
 
         for i in range(len(grid)):
             for j in range(len(grid[0])):
-                if (i, j) not in visited:
+                if (i, j) not in explored:
                     region = explore_region((i, j), grid)
                     result += len(region[0]) * compute_num_sides(region[1])
-                    visited |= region[0]
+                    explored |= region[0]
 
         return result
 

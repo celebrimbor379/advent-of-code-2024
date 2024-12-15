@@ -50,20 +50,19 @@ def explore_region(pos, grid):
     return (seen, perimiter)
 
 def get_solution(input_path):
-    result = 0
-
     with open(input_path) as input_file:
+        result = 0
         grid = [[x for x in row.strip()] for row in input_file.readlines()]
-        visited = set()
+        explored = set()
 
         for i in range(len(grid)):
             for j in range(len(grid[0])):
-                if (i, j) not in visited:
+                if (i, j) not in explored:
                     region = explore_region((i, j), grid)
                     result += len(region[0]) * region[1]
-                    visited |= region[0]
+                    explored |= region[0]
 
-    return result
+        return result
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
