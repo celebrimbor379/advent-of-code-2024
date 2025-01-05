@@ -1,87 +1,63 @@
 import argparse
-from collections import deque
+from heapq import heappush, heappop
+from dataclasses import dataclass
 
-class Path():
-    def __init__(self, visited, end, direction, total):
-        self.visited = visited
-        self.end = end
-        self.direction = direction
-        self.total = total
+@dataclass(order=True)
+class Node:
+    cost: int
+    row: int
+    col: int
+    direction: str
+    visited: bool
 
-    def __str__(self):
-        return 'end={}, direction={}, total={}, visited={}'.format(self.end, self.direction, self.total, self.visited)
+def process_neighbor(direction, neighbor, pqueue, current):
+    if neighbor and not neighbor.visited:
+        neighbor.direction = direction
+        cost_from_current = current.cost + (1 if current.direction == direction else 1001)
+        neighbor.cost = min(neighbor.cost, cost_from_current)
+        heappush(pqueue, neighbor)
 
-def get_new_path(next_pos, next_direction, walls, cur, min_seen):
-    if (not next_pos in walls) and (not next_pos in cur.visited):
-        cost = cur.total + (1 if next_direction == cur.direction else 1001)
-        if not cost >= min_seen:
-            visited = set(cur.visited)
-            visited.add(cur.end)
-            return Path(visited, next_pos, next_direction, cost)
+def go_go_gadget_dijkstra(start, nodes):
+    # heapq implements heap operations on a plain ol' list, no actual heap needed. This will be our
+    # priority queue. Sort key will be the cost since @dataclasses are compared using their fields
+    # as a tuple, in order.
+    pqueue = []
+    heappush(pqueue, start)
+
+    while len(pqueue) > 0:
+        current = heappop(pqueue)
+        current.visited = True
+        process_neighbor('N', nodes[current.row - 1][current.col], pqueue, current)
+        process_neighbor('S', nodes[current.row + 1][current.col], pqueue, current)
+        process_neighbor('E', nodes[current.row][current.col + 1], pqueue, current)
+        process_neighbor('W', nodes[current.row][current.col - 1], pqueue, current)
         
-    return None
-    
-
-def find_lowest_cost(start, end, walls):
-    min_seen = float('inf')
-    queue = deque()
-    queue.appendleft(Path(set(), start, 'E', 0))
-
-    while len(queue) > 0:
-        # print()
-        for _ in range(len(queue)):
-            cur = queue.pop()
-            # print(cur)
-            
-            if cur.end == end:
-                print('found end at {}'.format(cur))
-                min_seen = min(min_seen, cur.total)
-                continue
-
-            east_path = get_new_path((cur.end[0], cur.end[1] + 1), 'E', walls, cur, min_seen)
-            if east_path:
-                queue.appendleft(east_path)
-                
-            west_path = get_new_path((cur.end[0], cur.end[1] - 1), 'W', walls, cur, min_seen)
-            if west_path:
-                queue.appendleft(west_path)
-            
-            north_path = get_new_path((cur.end[0] - 1, cur.end[1]), 'N', walls, cur, min_seen)
-            if north_path:
-                queue.appendleft(north_path)
-            
-            south_path = get_new_path((cur.end[0] + 1, cur.end[1]), 'S', walls, cur, min_seen)
-            if south_path:
-                queue.appendleft(south_path)
-            
-    return min_seen
-
 def get_solution(input_path):
-    walls = set()
+    nodes = []
     start = None
     end = None
 
     with open(input_path) as input_file:
-        row = 0
-        for line in input_file:
-            l = line.strip()
-            for col in range(len(l)):
-                cur = l[col]
-                match cur:
-                    case '#':
-                        walls.add((row, col))
+        row_num = 0
+        for l in input_file:
+            line = l.strip()
+            # Store parsed nodes in a 2D array to make neighbor lookup easy
+            row = [None] * len(line)
+            for col_num in range(len(line)):
+                match line[col_num]:
+                    case '.':
+                        row[col_num] = Node(float('inf'), row_num, col_num, '', False)
                     case 'E':
-                        end = (row, col)
+                        end = Node(float('inf'), row_num, col_num, '', False)
+                        row[col_num] = end
                     case 'S':
-                        start = (row, col)
-            row += 1
+                        start = Node(0, row_num, col_num, 'E', False)
+                        row[col_num] = start
+            nodes.append(row)
+            row_num += 1
 
-        # print()
-        # print(start)
-        # print(end)
-        # print(sorted(walls))
-
-    return find_lowest_cost(start, end, walls)
+    go_go_gadget_dijkstra(start, nodes)
+    return end.cost
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
