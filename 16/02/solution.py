@@ -12,7 +12,7 @@ class Node:
     parents: list = field(default_factory=list)
 
 def process_neighbor(direction, neighbor_square, pqueue, current):
-    if neighbor_square and direction in neighbor_square and not neighbor_square[direction].visited:
+    if neighbor_square and (direction in neighbor_square) and (not neighbor_square[direction].visited):
         neighbor = neighbor_square[direction]
         cost_from_current = current.cost + (1 if current.direction == direction else 1001)
         if cost_from_current < neighbor.cost:
@@ -21,11 +21,10 @@ def process_neighbor(direction, neighbor_square, pqueue, current):
             neighbor.parents.append(current)
             heappush(pqueue, neighbor)
         elif cost_from_current == neighbor.cost:
-            # Add all parents with an equal cost
+            # Add all parents with an equal cost to collect all shortest paths
             neighbor.parents.append(current)
 
 def go_go_gadget_dijkstra(start, nodes):
-    # heapq implements heap operations on a plain ol' list, no actual heap needed.
     pqueue = []
     heappush(pqueue, start)
 
@@ -50,16 +49,13 @@ def go_go_gadget_dijkstra(start, nodes):
                 process_neighbor('S', nodes[current.row + 1][current.col], pqueue, current)
                 process_neighbor('W', nodes[current.row][current.col - 1], pqueue, current)
 
-def walk_path(node, seen):
-    if not node:
-        return
-
-    seen.add((node.row, node.col))
+def backtrack_from_end(node, seen):
+    seen = {(node.row, node.col)}
     for p in node.parents:
-        walk_path(p, seen)
+        seen |= backtrack_from_end(p, seen)
+    return seen
 
 def get_solution(input_path):
-    raw = []
     nodes = []
     start = None
     end = None
@@ -68,20 +64,24 @@ def get_solution(input_path):
         row_num = 0
         for l in input_file:
             line = l.strip()
-            raw.append(list(line))
             # Store parsed nodes in a 2D array to make neighbor lookup easy
             row = [None] * len(line)
             for col_num in range(len(line)):
                 match line[col_num]:
                     case '.':
+                        # Since edge weights between two nodes are different depending on which
+                        # direction the traveler is facing on the source node, we can just treat all
+                        # row/column/direction combinations as distinct nodes.
                         row[col_num] = {'N': Node(float('inf'), row_num, col_num, 'N', False),
                                         'S': Node(float('inf'), row_num, col_num, 'S', False),
                                         'E': Node(float('inf'), row_num, col_num, 'E', False),
                                         'W': Node(float('inf'), row_num, col_num, 'W', False)}
                     case 'E':
-                        end = {'N': Node(float('inf'), row_num, col_num, 'N', False),
+                        # All input versions have 'E' in the upper right, so entrance directions can
+                        # only be these two.
+                        row[col_num] = {'N': Node(float('inf'), row_num, col_num, 'N', False),
                                'E': Node(float('inf'), row_num, col_num, 'E', False)}
-                        row[col_num] = end
+                        end = row[col_num]
                     case 'S':
                         row[col_num] = {'E': Node(0, row_num, col_num, 'E', False)}
                         start = row[col_num]['E']
@@ -89,16 +89,8 @@ def get_solution(input_path):
             row_num += 1
 
     go_go_gadget_dijkstra(start, nodes)
-    tiles = set()
-    walk_path(sorted(end.values(), key=lambda x: x.cost)[0], tiles)
-
-    print()
-    for t in tiles:
-        raw[t[0]][t[1]] = 'O'
-    for r in raw:
-        print(''.join(r))
-    
-    return len(tiles)
+    tiles_on_shortest_paths = backtrack_from_end(end['N'] if end['N'].cost < end['E'].cost else end['E'], set())
+    return len(tiles_on_shortest_paths)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
