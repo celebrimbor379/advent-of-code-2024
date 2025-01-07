@@ -11,43 +11,53 @@ class Node:
     visited: bool
     parents: list = field(default_factory=list)
 
-def process_neighbor(direction, neighbor, pqueue, current):
-    if neighbor:
+def process_neighbor(direction, neighbor_square, pqueue, current):
+    if neighbor_square and direction in neighbor_square and not neighbor_square[direction].visited:
+        neighbor = neighbor_square[direction]
         cost_from_current = current.cost + (1 if current.direction == direction else 1001)
-        if neighbor.visited and neighbor.cost == cost_from_current:
-            # This node has more than one shortest path to it, so we need to keep references to all of them
-            neighbor.parents.append(current)
-        elif not neighbor.visited:
-            neighbor.direction = direction
-            neighbor.cost = min(neighbor.cost, cost_from_current)
-            # Update the parent along with the cost until the node is actually visited.
+        if cost_from_current < neighbor.cost:
+            neighbor.cost = cost_from_current
             neighbor.parents.clear()
             neighbor.parents.append(current)
             heappush(pqueue, neighbor)
+        elif cost_from_current == neighbor.cost:
+            # Add all parents with an equal cost
+            neighbor.parents.append(current)
 
 def go_go_gadget_dijkstra(start, nodes):
-    # heapq implements heap operations on a plain ol' list, no actual heap needed. This will be our
-    # priority queue. Sort key will be the cost since @dataclasses are compared using their fields
-    # as a tuple, in order.
+    # heapq implements heap operations on a plain ol' list, no actual heap needed.
     pqueue = []
     heappush(pqueue, start)
 
-    while len(pqueue) > 0:
+    while pqueue:
         current = heappop(pqueue)
         current.visited = True
-        process_neighbor('N', nodes[current.row - 1][current.col], pqueue, current)
-        process_neighbor('S', nodes[current.row + 1][current.col], pqueue, current)
-        process_neighbor('E', nodes[current.row][current.col + 1], pqueue, current)
-        process_neighbor('W', nodes[current.row][current.col - 1], pqueue, current)
+        match current.direction:
+            case 'N':
+                process_neighbor('N', nodes[current.row - 1][current.col], pqueue, current)
+                process_neighbor('E', nodes[current.row][current.col + 1], pqueue, current)
+                process_neighbor('W', nodes[current.row][current.col - 1], pqueue, current)
+            case 'S':
+                process_neighbor('S', nodes[current.row + 1][current.col], pqueue, current)
+                process_neighbor('E', nodes[current.row][current.col + 1], pqueue, current)
+                process_neighbor('W', nodes[current.row][current.col - 1], pqueue, current)
+            case 'E':
+                process_neighbor('N', nodes[current.row - 1][current.col], pqueue, current)
+                process_neighbor('S', nodes[current.row + 1][current.col], pqueue, current)
+                process_neighbor('E', nodes[current.row][current.col + 1], pqueue, current)
+            case 'W':
+                process_neighbor('N', nodes[current.row - 1][current.col], pqueue, current)
+                process_neighbor('S', nodes[current.row + 1][current.col], pqueue, current)
+                process_neighbor('W', nodes[current.row][current.col - 1], pqueue, current)
 
 def walk_path(node, seen):
     if not node:
         return
-    
+
     seen.add((node.row, node.col))
     for p in node.parents:
         walk_path(p, seen)
-        
+
 def get_solution(input_path):
     raw = []
     nodes = []
@@ -64,34 +74,29 @@ def get_solution(input_path):
             for col_num in range(len(line)):
                 match line[col_num]:
                     case '.':
-                        row[col_num] = Node(float('inf'), row_num, col_num, '', False)
+                        row[col_num] = {'N': Node(float('inf'), row_num, col_num, 'N', False),
+                                        'S': Node(float('inf'), row_num, col_num, 'S', False),
+                                        'E': Node(float('inf'), row_num, col_num, 'E', False),
+                                        'W': Node(float('inf'), row_num, col_num, 'W', False)}
                     case 'E':
-                        end = Node(float('inf'), row_num, col_num, '', False)
+                        end = {'N': Node(float('inf'), row_num, col_num, 'N', False),
+                               'E': Node(float('inf'), row_num, col_num, 'E', False)}
                         row[col_num] = end
                     case 'S':
-                        start = Node(0, row_num, col_num, 'E', False)
-                        row[col_num] = start
+                        row[col_num] = {'E': Node(0, row_num, col_num, 'E', False)}
+                        start = row[col_num]['E']
             nodes.append(row)
             row_num += 1
 
     go_go_gadget_dijkstra(start, nodes)
     tiles = set()
-    walk_path(end, tiles)
+    walk_path(sorted(end.values(), key=lambda x: x.cost)[0], tiles)
 
+    print()
     for t in tiles:
         raw[t[0]][t[1]] = 'O'
-    print()
     for r in raw:
         print(''.join(r))
-
-    print(sorted(tiles))
-
-    for row in nodes:
-        for n in row:
-            if n and (n.row, n.col) == (7, 4):
-                print(n)
-            if n and (n.row, n.col) == (7, 5):
-                print(n)
     
     return len(tiles)
 
