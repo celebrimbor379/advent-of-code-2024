@@ -41,13 +41,13 @@ def go_go_gadget_dijkstra(start, nodes):
                 process_neighbor('E', nodes[current.row][current.col + 1], pqueue, current)
                 process_neighbor('W', nodes[current.row][current.col - 1], pqueue, current)
             case 'E':
-                process_neighbor('N', nodes[current.row - 1][current.col], pqueue, current)
-                process_neighbor('S', nodes[current.row + 1][current.col], pqueue, current)
                 process_neighbor('E', nodes[current.row][current.col + 1], pqueue, current)
-            case 'W':
                 process_neighbor('N', nodes[current.row - 1][current.col], pqueue, current)
                 process_neighbor('S', nodes[current.row + 1][current.col], pqueue, current)
+            case 'W':
                 process_neighbor('W', nodes[current.row][current.col - 1], pqueue, current)
+                process_neighbor('N', nodes[current.row - 1][current.col], pqueue, current)
+                process_neighbor('S', nodes[current.row + 1][current.col], pqueue, current)
 
 def backtrack_from_end(node, seen):
     seen = {(node.row, node.col)}
